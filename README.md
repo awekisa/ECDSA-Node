@@ -29,3 +29,21 @@ The server folder contains a node.js server using [express](https://expressjs.co
 The application should connect to the default server port (3042) automatically! 
 
 _Hint_ - Use [nodemon](https://www.npmjs.com/package/nodemon) instead of `node` to automatically restart the server on any changes.
+
+
+****************************************
+Developers notes
+
+Added pseudo wallet (api realy) that holds private keys so that they are not exposed to client and server.
+Client unlocks the wallet with password and signs the transactions (password is required for that again) by making api calls to the wallet.
+Server validates transactions with signature from the client.
+
+1. run 'npm install dotenv' on both 'client' and 'server'.
+2. create .env file on on both 'client' and 'server'
+3. add .env files to .gitignore in both 'client' and 'server' in order to not commit the private keys
+4. add private keys to .env files as a key-value pair: 
+    private_key_1=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    private_key_2=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
+    
+

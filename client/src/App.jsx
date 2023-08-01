@@ -3,16 +3,16 @@ import Transfer from "./Transfer";
 import "./App.scss";
 import { useState } from "react";
 
-import { secp256k1 } from "ethereum-cryptography/secp256k1.js";
-import { toHex } from "ethereum-cryptography/utils";
-
 function App() {
   const [balance, setBalance] = useState(0);
   const [address, setAddress] = useState("");
+ const [password, setPassword] = useState("");
 
   return (
     <div className="app">
       <Wallet
+        password={password}
+        setPassword={setPassword}
         balance={balance}
         setBalance={setBalance}
         address={address}

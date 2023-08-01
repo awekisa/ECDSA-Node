@@ -2,14 +2,19 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 3042;
+const secp = require("ethereum-cryptography/secp256k1.js");
+const { toHex, utf8ToBytes } = require("ethereum-cryptography/utils");
+const { keccak256 } = require("ethereum-cryptography/keccak");
+
+require('dotenv').config();
 
 app.use(cors());
 app.use(express.json());
 
 const balances = {
-  "6f83c59fd71a4fb75ddd39ad8d184b9c6bbd3b5941582b4696e6c912264d4087": 100, // private key: 8b0e277cccd3707c216a7274943e83679e5ae2ec78a6fd665958a82fced5ea6b
-  "0dcde08c5080450a8f407fca79bf2ac1131b2b7d48741efac418a060b97e74c2": 50, // private key: 01583f92e176a6c8bae2f16426c35ff86b6aee05022c93c2c1445f26285b1ca5
-  "257210de95fd1d2f4a5859cbe9a80cd71e02301a52f0a5ef0acc0dc253e695e7": 75, // private key: ea42a7811b47150fb3c6fe79c537d4fe72d11d4e212a57ad7f75a9efda9cc276
+  "53d14ca501a01f6e8beb47288d886ea651c4521d": 100,
+  "3afca95bcee69817c36b14993aa639601736251e": 50,
+  "27afabf74b980539889839c24c73df592536ec7a": 75,
 };
 
 app.get("/balance/:address", (req, res) => {
@@ -18,18 +23,48 @@ app.get("/balance/:address", (req, res) => {
   res.send({ balance });
 });
 
-app.post("/send", (req, res) => {
-  const { sender, recipient, amount } = req.body;
+app.get("/address/:password", (req, res) => {
+  const { password } = req.params;
+  const privateKey = process.env[password];
+  let address = "";
 
-  setInitialBalance(sender);
+  if (privateKey) {
+    const publicKey = secp.secp256k1.getPublicKey(privateKey);
+    address = toHex(getAddress(publicKey));
+  }
+  
+  res.send({ address });
+});
+
+app.post("/send", (req, res) => {
+  const { sender, recipient, amount, signature, hashedMessage } = req.body;
+
+  console.log('sender: ', sender);
+  console.log(' recipient: ',recipient);
+  console.log(' amount: ',amount);
+  console.log(' signature: ',signature);
+  console.log(' hashedMessage: ',hashedMessage);
+  let deserializedSignature = JSON.parse(signature);
+  deserializedSignature.r = BigInt(deserializedSignature.r);
+  deserializedSignature.s = BigInt(deserializedSignature.s);
+
+  let isVerified = secp.secp256k1.verify(deserializedSignature, hashedMessage, sender);
+  console.log(isVerified);
+  if (!isVerified) {
+    res.status(401).send({message: "Unauthorized transaction!"});
+    return;
+  }
+
+  let senderAddress = getAddress(sender);
+  setInitialBalance(senderAddress);
   setInitialBalance(recipient);
 
-  if (balances[sender] < amount) {
+  if (balances[senderAddress] < amount) {
     res.status(400).send({ message: "Not enough funds!" });
   } else {
-    balances[sender] -= amount;
+    balances[senderAddress] -= amount;
     balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
+    res.send({ balance: balances[senderAddress] });
   }
 });
 
@@ -41,4 +76,15 @@ function setInitialBalance(address) {
   if (!balances[address]) {
     balances[address] = 0;
   }
+}
+
+function getAddress(publicKey) {
+  if (!publicKey){
+      return "";
+  }
+
+  var bytes = utf8ToBytes(publicKey).slice(1);
+  var hash = toHex(keccak256(bytes).slice(-20));
+
+  return hash;
 }
