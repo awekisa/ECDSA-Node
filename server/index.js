@@ -39,17 +39,12 @@ app.get("/address/:password", (req, res) => {
 app.post("/send", (req, res) => {
   const { sender, recipient, amount, signature, hashedMessage } = req.body;
 
-  console.log('sender: ', sender);
-  console.log(' recipient: ',recipient);
-  console.log(' amount: ',amount);
-  console.log(' signature: ',signature);
-  console.log(' hashedMessage: ',hashedMessage);
   let deserializedSignature = JSON.parse(signature);
   deserializedSignature.r = BigInt(deserializedSignature.r);
   deserializedSignature.s = BigInt(deserializedSignature.s);
 
   let isVerified = secp.secp256k1.verify(deserializedSignature, hashedMessage, sender);
-  console.log(isVerified);
+
   if (!isVerified) {
     res.status(401).send({message: "Unauthorized transaction!"});
     return;

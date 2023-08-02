@@ -30,20 +30,32 @@ The application should connect to the default server port (3042) automatically!
 
 _Hint_ - Use [nodemon](https://www.npmjs.com/package/nodemon) instead of `node` to automatically restart the server on any changes.
 
+### Wallet
+
+The server folder contains a node.js server using [express](https://expressjs.com/). To run the server, follow these steps:
+
+1. Open a terminal within the `/wallet` folder 
+2. Run `npm install` to install all the depedencies
+3. Add .env file in wallet project to hold user passwords and private keys in format pass=privateKey
+4. Run `node index` to start the server 
+
+The application should connect to the default server port (3000) automatically! 
+
+_Hint_ - Use [nodemon](https://www.npmjs.com/package/nodemon) instead of `node` to automatically restart the server on any changes.
 
 ****************************************
 Developers notes
 
-Added pseudo wallet (api realy) that holds private keys so that they are not exposed to client and server.
-Client unlocks the wallet with password and signs the transactions (password is required for that again) by making api calls to the wallet.
-Server validates transactions with signature from the client.
+Added pseudo wallet that holds all private keys so that they are not exposed to client or server.
+Users unlock the wallet with a password. Passwords are stored in .env file in the wallet project. (.env file is added to .gitignore so it won't be commited)
+When users make a transaction, few new things are happening:
+    - by clicking Transfer button user is prompt to confirm his password and click Sign Transaction button. 
+    - then client calls the wallet and receives signature for the signed transaction.
+    - then client calls the server and server validates transaction with the signature from the client.
 
-1. run 'npm install dotenv' on both 'client' and 'server'.
-2. create .env file on on both 'client' and 'server'
-3. add .env files to .gitignore in both 'client' and 'server' in order to not commit the private keys
-4. add private keys to .env files as a key-value pair: 
-    private_key_1=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    private_key_2=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+NB: the balances in server/index.js need to be adjusted with respective addresses when new passwords/private keys are generated and added in wallet/.env
+
+
 
     
 

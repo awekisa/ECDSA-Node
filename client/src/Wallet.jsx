@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { getAddress, hashMessage } from "./scripts/cryptoUtils";
-import { getPublicKeyFromExternalWallet, getBalance} from "./scripts/cryptoUtils";
+import Unlock from "./Unlock";
+import Logout from "./Logout";
+import { getAddress } from "./scripts/cryptoUtils";
+import { getPublicKeyFromExternalWallet, getBalance } from "./scripts/cryptoUtils";
 
-function Wallet({ address, setAddress, balance, setBalance }) {
-  const [password, setPassword] = useState("");
+
+function Wallet({ loggedIn, setLoggedIn, password, setPassword, address, setAddress, balance, setBalance }) {
   const setValue = (setter) => (evt) => setter(evt.target.value);
 
   async function unlock(evt) {
@@ -12,6 +13,7 @@ function Wallet({ address, setAddress, balance, setBalance }) {
     if (password) {
       const publicKey = await getPublicKeyFromExternalWallet(password);
       if (publicKey) {
+        setLoggedIn(true);
         const address = getAddress(publicKey);
         setAddress(address);
 
@@ -22,32 +24,34 @@ function Wallet({ address, setAddress, balance, setBalance }) {
           setBalance(0);
         }
       } else {
-
       setAddress("");
       setBalance(0);
+      setLoggedIn(false);
       }
     }
   }
 
-  return (
-    <form className="container wallet" onSubmit={unlock}>
-      <h1>Your Wallet</h1>
+  async function logout(evt) {
+    evt.preventDefault();
 
-      <label>
-        Password:
-        <input 
-          placeholder="Type a password:" 
-          value={password}
-          onChange={setValue(setPassword)} ></input>
-      </label>
+    setLoggedIn(false);
+    setPassword("");
+  }
 
-      <div className="address">Address: {address}</div>
-      <div className="balance">Balance: {balance}</div>
-      <input type="submit" className="button" value="Unlock" />
-    </form>
-    
-  );
+  if (loggedIn) {
+    return <Logout 
+      address={address}
+      balance={balance}
+      logout={logout}
+    />;
+  } else {
+    return <Unlock 
+      password={password}
+      setPassword={setPassword}
+      unlock={unlock}
+      setValue={setValue}
+    />;
+  }
 }
-
 
 export default Wallet;
